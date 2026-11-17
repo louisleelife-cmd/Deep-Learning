@@ -349,7 +349,7 @@ def dm02():
 
 	# 2.2不共享内存
 	# t1 = torch.from_numpy(n1.copy())
-	# t1 = torch.tensor(data=n1)
+	# t1 = torch.tensor(n1)
 	print(f't1->{t1},type:{type(t1)}')
 
 	# 3. 修改张量元素，验证上述方式是否共享内存
@@ -390,28 +390,34 @@ if __name__ == '__main__': # 调用函数测试
 
 ### 5.1 基本运算
 
-- `+` `-` `*` `/` `-`
-
-- tensor/torch.add() sub() mul() div() neg()
-
-- `tensor/torch.add_()` `sub_()` `mul_()` `div_()` `neg_()`
+- 运算: 张量和数值之间运算, 张量和张量之间运算
+- 加、减、乘、除、取反
+- tensor/torch.add() sub() mul() div() neg() 不修改原张量
+- `tensor/torch.add_()` `sub_()` `mul_()` `div_()` `neg_()`  带下划线的运算会修改原数据，相当于pandas中的inplace=true
+- 上面的函数都可以用符号来替代：`+` `-` `*` `/` `-`
+- 张量和数值运算，该数值会与向量中所有元素依次进行对应运算
 
   ```python
   import torch
-  
-  
-  # 运算: 张量和数值之间运算, 张量和张量之间运算
-  # + - * / -
-  # add(other=) sub() mul() div() neg()  不修改原张量
-  # add_() sub_() mul_() div_() neg_()  修改原张量
-  
+     
   def dm01():
-  	# 创建张量
+  	# 1. 创建张量
   	t1 = torch.tensor(data=[1, 2, 3, 4])
-  	# 张量和数值运算
-  	t2 = t1 + 10
-  	print('t2->', t2)
-  	# 张量之间运算, 对应位置的元素进行计算
+
+  	# 2. 加法
+	# t2 = t1.add(10)  #不会修改原数据
+  	# t2 = t1 + 10  #效果同上
+
+	# t2 = t1.add_(10) #修改原数据
+	# t1 += 10  #效果同上
+	
+  	# 其他函数效果同上，快速演示。
+	t3 = t1.sub(1) #减法
+	t4 = t1.mul(2) #乘法
+	t5 = t1.div(2)	#除法
+	t6 = t1.neg()  #取反
+
+  	# 3. 张量之间运算, 对应位置的元素进行计算
   	t3 = t1 + t2
   	print('t3->', t3)
   
@@ -432,25 +438,26 @@ if __name__ == '__main__': # 调用函数测试
 
 ### 5.2 点乘运算
 
-- 对应位置的元素进行乘法计算, 一般要求张量形状相同
+- 对应位置的元素进行乘法计算, 要求张量形状（维度）完全相同
+- t1.mul(t2), t1 * t2
 
   ```python
   import torch
   
-  
   # 点乘: 又称为阿达玛积, 张量元素级乘法, 对应位置的元素进行点乘, 一般要求两个张量形状相同  *  mul()
   def dm01():
-  	# t1 = torch.tensor(data=[[1, 2], [3, 4]])
-  	# (2, )
-  	t1 = torch.tensor(data=[1, 2])
-  	# (2, 2)
-  	t2 = torch.tensor(data=[[5, 6], [7, 8]])
-  	t3 = t1 * t2
+	# 1. 定义张量，2行3列
+  	# t1 = torch.tensor(data=[[1, 2, 8], [3, 4, 9]])
+
+  	# 2. 定义张量，2行3列
+  	t2 = torch.tensor(data=[[5, 6, 12], [5, 7, 8]])
+
+	# 3. 张量 点乘运算
+	t3 = t1 * t2
   	print('t3->', t3)
-  	t4 = torch.mul(input=t1, other=t2)
+  	t4 = t1.mul(t2)
   	print('t4->', t4)
-  
-  
+    
   if __name__ == '__main__':
   	dm01()
   ```
@@ -458,82 +465,76 @@ if __name__ == '__main__': # 调用函数测试
 ### 5.3 矩阵乘法运算
 
 - 第一个矩阵的行数据和第二个矩阵的列数据相乘
+- 运算条件：A矩阵的列 = B矩阵的行； 运算结果：A矩阵的行，B矩阵的列
+- t1 @ t2，t1.matmul(t2) 
 
   ```python
   import torch
-  
-  
-  # 矩阵乘法: (n, m) * (m, p) = (n, p)  第一个矩阵的行和第二个矩阵的列相乘  @  torch.matmul(input=, ohter=)
+
   def dm01():
-  	# (2, 2)
-  	t1 = torch.tensor(data=[[1, 2],
-  							[3, 4]])
-  	# (2, 3)
-  	t2 = torch.tensor(data=[[5, 6, 7],
-  							[8, 9, 10]])
+  	# 1. 定义张量，shape(2, 2)
+  	t1 = torch.tensor(data=[[1, 2], [3, 4]])
+  	# 2. 定义张量，shape(2, 3)
+  	t2 = torch.tensor(data=[[5, 6, 7],[8, 9, 10]])
   
-  	# @
-  	t3 = t1 @ t2
+  	# 3. 矩阵乘法运算
+  	t3 = t1 @ t2  #矩阵相乘
+	t3 = t1.matmul(t2) #效果同上
   	print('t3->', t3)
-  	# torch.matmul(): 不同形状, 只要后边维度符合矩阵乘法规则即可
+
+	# 4. dot 一维张量相乘运算。感觉用上面的点乘算法更方便。
+	t4 = torch.tensor([1,2,3])
+	t5 = torch.tensor([7,8,9])
+	t6 = t4.dot(t5) 
+
+  	# torch.matmul(): 不同形状, 只要最后2个维度符合矩阵乘法规则即可
   	t4 = torch.matmul(input=t1, other=t2)
   	print('t4->', t4)
-  
-  
+    
   if __name__ == '__main__':
   	dm01()
   ```
 
 ## 6 张量运算函数
 
-- mean()
-
-- sum()
-
-- min()/max()
-
-- dim: 按不同维度计算
-
-- exp(): 指数
-
-- sqrt(): 平方根
-
-- pow(): 幂次方
-
-- log()/log2()/log10(): 对数
+- mean() 均值，sum() 求和，min()/max() 大小值    -> 都有dim参数，0是列，1是行。
+- exp(): 指数，sqrt() 平方根，pow() 幂次方，log()/log2()/log10() 对数 -> 没有dim参数
+-  ** 代表符号的幂
 
   ```python
   import torch
-  
-  
+    
   def dm01():
-  	# 创建张量
-  	t1 = torch.tensor(data=[[1., 2, 3, 4],
-  							[5, 6, 7, 8]])
+  	# 1. 创建张量
+  	t1 = torch.tensor(data=[[1, 2, 3, 4],
+  							[5, 6, 7, 8]]) # 为了阅读方便，可以换行展示
   
-  	# dim=0 按列
-  	# dim=1 按行
-  	# 平均值
+  	# 2. 平均值
   	print('所有值平均值->', t1.mean())
   	print('按列平均值->', t1.mean(dim=0))
-  	print('按行平均值->', t1.mean(dim=1))
-  	# 求和
+  	print('按行平均值->', t1.mean(dim=1))   	# dim=0 按列；dim=1 按行
+
+  	# 3. 求和。 max和min同理。
   	print('所有值求和->', t1.sum())
   	print('按列求和->', t1.sum(dim=0))
   	print('按行求和->', t1.sum(dim=1))
-  	# sqrt: 开方 平方根
+
+  	# 4. sqrt: 开方 平方根
   	print('所有值开方->', t1.sqrt())
-  	# pow: 幂次方  x^n
-  	# exponent:几次方
+
+  	# 5. pow: 幂次方  x^n； exponent:几次方
   	print('幂次方->',torch.pow(input=t1, exponent=2))
-  	# exp: 指数 e^x  张量的元素值就是x
-  	print('指数->', torch.exp(input=t1))
-  	# log: 对数  log(x)->以e为底  log2()  log10()
+	print(t1.pow(4))
+	print(t1 ** 4)
+
+  	# 6. exp: 指数 e的n次幂  n就是张量中的元素值。
+  	print('指数->', torch.exp(input=t1)) #这里就是e的1至8的次方的幂。
+
+  	# 7. log: 对数  log(x)->以e为底  log2()  log10()
   	print('以e为底对数->', torch.log(input=t1))
   	print('以2为底对数->', t1.log2())
   	print('以10为底对数->', t1.log10())
-  
-  
+    
   if __name__ == '__main__':
   	dm01()
   ```
