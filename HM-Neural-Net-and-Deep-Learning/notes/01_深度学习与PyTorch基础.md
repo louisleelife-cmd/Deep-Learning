@@ -311,18 +311,19 @@
 import torch
 import numpy as np
 
-
 # 张量转换成numpy数组
 # tensor.numpy(): 共享内存, 修改一个另外一个也跟着变, 可以通过copy()函数不共享内存
 def dm01():
+	# 创建张量
 	t1 = torch.tensor([[1, 2, 3], [4, 5, 6]])
-	print('t1->', t1)
+	print(f't1->{t1},type:{type(t1)}')
+
 	# 转换成numpy数组
-	# n1 = t1.numpy()
-	n1 = t1.numpy().copy()
-	print('n1->', n1)
-	print('n1的类型->', type(n1))
-	# 修改n1的第一个值
+	# n1 = t1.numpy() 				#共享内存
+	n1 = t1.numpy().copy()		 	#不共享内存
+	print(f'n1->{n1},type:{type(n1)}')
+
+	# 修改n1的第一个值，演示上述方式是否共享内存
 	# [0][0]->第一行第一列的元素
 	n1[0][0] = 100
 	print('n1修改后->', n1)
@@ -333,22 +334,29 @@ def dm01():
 
 ```python
 # numpy数组转换成张量
-# torch.from_numpy(ndarray): 共享内存, 对ndarray数组进行copy()
-# torch.tensor(data=ndarray): 不共享内存
+# 方式一：torch.from_numpy(ndarray): 共享内存, 对ndarray数组进行copy()
+# 方式二：torch.tensor(data=ndarray): 不共享内存
+
 def dm02():
+	# 1. 创建numpy数组
 	n1 = np.array([[1, 2, 3], [4, 5, 6]])
-	# 转换成张量
-	# 共享内存
+
+	# 2. 转换成张量
+	# 2.1 共享内存
 	t1 = torch.from_numpy(n1)
-	# 不共享内存
+	s1 = t1.type(torch.float32) #可以测试转换张量类型为float32类型
+	# t1 = torch.from_numpy(n1).type(torch.float32) #也可以使用链式编程方式，直接转张量类型为float32
+
+	# 2.2不共享内存
 	# t1 = torch.from_numpy(n1.copy())
 	# t1 = torch.tensor(data=n1)
-	print('t1->', t1)
-	print('t1类型->', type(t1))
-	# 修改张量元素
+	print(f't1->{t1},type:{type(t1)}')
+
+	# 3. 修改张量元素，验证上述方式是否共享内存
 	t1[0][0] = 8888
-	print('t1修改后->', t1)
-	print('n1->', n1)
+	print(f'n1->{n1},type:{type(n1)}')
+	print(f't1->{t1},type:{type(t1)}')
+
 ```
 
 ### 4.3 提取标量张量的数值
@@ -356,24 +364,26 @@ def dm02():
 ```python
 import torch
 
-
-# tensor.item(): 提取单个元素张量的数值, 张量可以是标量张量/一维张量/二维张量...只要是单个元素即可
+# tensor.item(): 提取单个元素标量张量的数值, 张量可以是标量张量/一维张量/二维张量...只要是单个元素即可！
+# tensor.item()的参数也可以是一个bool值，如果是true就按照1来运算；如果是false就按照0来运算。
 def dm01():
-	# 数值转换成张量
-	# 标量
-	t1 = torch.tensor(data=10)
+	# 创建标量的张量
+	t1 = torch.tensor(10)
 	# 一维
-	# t1 = torch.tensor(data=[10])
+	# t1 = torch.tensor([10])
 	# 二维
-	# t1 = torch.tensor(data=[[10]])
-	print('t1->', t1)
-	print('t1形状->', t1.shape)
+	# t1 = torch.tensor([[10]])
+	print('t1->', t1)  			#查看张量
+	print('t1形状->', t1.shape)  #查看张量形状
+
 	# 单个元素张量转换成数值, 提取数值
-	print('t1.item()->', t1.item())
+	a = t1.item()
+	print(f'value->{a};type:{type(a)}')
 
-
-if __name__ == '__main__':
-	dm01()
+if __name__ == '__main__': # 调用函数测试
+	#dm01()
+	#dm02()
+	#dm03()
 ```
 
 ## 5 张量数值计算
